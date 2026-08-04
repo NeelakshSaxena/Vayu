@@ -127,17 +127,25 @@ export const VoiceOrb: React.FC = () => {
       </div>
       
       {/* State Vignette - dynamically changes background ambient light based on State */}
-      <div 
-        className={`absolute inset-0 pointer-events-none transition-all duration-1000 ease-in-out ${
-          currentState === OrbState.Thinking ? 'animate-vignette-rotate' : ''
-        } ${
-          currentState === OrbState.Speaking ? 'animate-vignette-pulse' : ''
-        }`}
-        style={{ 
-          background: `radial-gradient(ellipse at 40% 60%, transparent 20%, ${vignette} 100%)`,
-          mixBlendMode: theme === 'light' ? 'multiply' : 'screen',
-        }} 
-      />
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        <div 
+          className={`absolute pointer-events-none transition-all duration-1000 ease-in-out rounded-full ${
+            currentState === OrbState.Thinking ? 'animate-vignette-rotate' : ''
+          } ${
+            currentState === OrbState.Speaking ? 'animate-vignette-pulse' : ''
+          }`}
+          style={{ 
+            width: '150vmax',
+            height: '150vmax',
+            top: '50%',
+            left: '50%',
+            marginTop: '-75vmax',
+            marginLeft: '-75vmax',
+            background: `radial-gradient(ellipse at 45% 55%, transparent 15%, ${vignette} 70%)`,
+            mixBlendMode: theme === 'light' ? 'multiply' : 'screen',
+          }} 
+        />
+      </div>
     </div>
   );
 };

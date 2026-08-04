@@ -22,7 +22,8 @@ function App() {
   const [micActive, setMicActive] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
 
-
+  const [showDevControls, setShowDevControls] = useState(false);
+  
   const messagesRef = useRef<Message[]>([]);
   useEffect(() => {
     messagesRef.current = messages;
@@ -219,7 +220,10 @@ function App() {
               <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12,18a6,6,0,1,1,6-6A6.006,6.006,0,0,1,12,18ZM12,8a4,4,0,1,0,4,4A4,4,0,0,0,12,8ZM12,4a1,1,0,0,0,1-1V2a1,1,0,0,0-2,0V3A1,1,0,0,0,12,4Zm0,16a1,1,0,0,0-1,1v1a1,1,0,0,0,2,0V21A1,1,0,0,0,12,20ZM22,11H21a1,1,0,0,0,0,2h1a1,1,0,0,0,0-2ZM4,12a1,1,0,0,0-1-1H2a1,1,0,0,0,0,2H3A1,1,0,0,0,4,12Zm14.657-6.071a1,1,0,0,0,.707-.293l.707-.707a1,1,0,1,0-1.414-1.414l-.707.707a1,1,0,0,0,.707,1.707ZM5.343,18.071l-.707.707a1,1,0,1,0,1.414,1.414l.707-.707a1,1,0,1,0-1.414-1.414Zm14.021,0a1,1,0,1,0-1.414,1.414l.707.707a1,1,0,0,0,1.414-1.414ZM4.636,5.636a1,1,0,0,0,1.414-1.414l-.707-.707A1,1,0,0,0,3.929,4.929Z"/></svg>
             )}
           </div>
-          <div className={cn("w-10 h-10 rounded-full backdrop-blur-md flex justify-center items-center pointer-events-auto cursor-pointer transition-colors", theme === 'dark' ? "bg-white/10 hover:bg-white/20" : "bg-black/10 hover:bg-black/20")}>
+          <div 
+            onClick={() => setShowDevControls(!showDevControls)}
+            className={cn("w-10 h-10 rounded-full backdrop-blur-md flex justify-center items-center pointer-events-auto cursor-pointer transition-colors", theme === 'dark' ? "bg-white/10 hover:bg-white/20" : "bg-black/10 hover:bg-black/20")}
+          >
             {/* Widget Icon */}
             <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M4,11V4H11V11ZM4,20V13H11V20ZM13,11V4H20V11ZM13,20V13H20V20Z"/></svg>
           </div>
@@ -227,8 +231,9 @@ function App() {
       </div>
       
       {/* Developer Control UI Overlay */}
-      <div className={cn("absolute top-32 left-8 z-30 flex flex-col gap-4 p-4 rounded-xl backdrop-blur-sm border scale-75 origin-top-left transition-colors", theme === 'dark' ? "bg-black/50 border-white/10" : "bg-white/50 border-black/10")}>
-        <h1 className={cn("text-xl font-bold tracking-wider", theme === 'dark' ? "text-white/90" : "text-black/90")}>DEV CONTROLS</h1>
+      {showDevControls && (
+        <div className={cn("absolute top-20 right-8 z-30 flex flex-col gap-4 p-4 rounded-xl backdrop-blur-sm border scale-90 origin-top-right transition-colors pointer-events-auto", theme === 'dark' ? "bg-black/50 border-white/10" : "bg-white/50 border-black/10")}>
+          <h1 className={cn("text-xl font-bold tracking-wider", theme === 'dark' ? "text-white/90" : "text-black/90")}>DEV CONTROLS</h1>
         
         <div className="flex flex-col gap-2">
           <label className={cn("text-xs uppercase tracking-widest", theme === 'dark' ? "text-white/50" : "text-black/50")}>State</label>
@@ -277,6 +282,7 @@ function App() {
           <MicVisualizer theme={theme} />
         </div>
       </div>
+      )}
 
     </div>
   );
