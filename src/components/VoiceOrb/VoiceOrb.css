@@ -19,9 +19,7 @@
   rotate: 90deg;
   cursor: pointer;
   /* Extreme light leaking glow effect matching the internal colors */
-  filter: drop-shadow(0 0 calc(10px * var(--glow-intensity, 1)) var(--color-1, #1E5BFF)) 
-          drop-shadow(0 0 calc(20px * var(--glow-intensity, 1)) var(--color-2, #6FD8FF))
-          drop-shadow(0 0 calc(40px * var(--glow-intensity, 1)) rgba(255, 255, 255, 0.4));
+  filter: drop-shadow(0 0 calc(10px * var(--glow-intensity, 1)) var(--color-1, #1E5BFF)) drop-shadow(0 0 calc(20px * var(--glow-intensity, 1)) var(--color-2, #6FD8FF)) drop-shadow(0 0 calc(40px * var(--glow-intensity, 1)) var(--glow-color, rgba(255, 255, 255, 0.4)));
   transition: width 0.1s linear, height 0.1s linear, filter 0.1s linear;
 }
 
@@ -30,17 +28,25 @@
   width: 100%;
   aspect-ratio: 1;
   border-radius: 50%;
-  background: #060606;
-  filter: blur(24px);
+  background: var(--orb-bg, #060606);
+  filter: blur(48px);
   transition: all 0.3s ease;
   animation: orb-rotate var(--animation-speed, 6s) infinite linear;
 }
 
 /* Base rotation for the entire orb */
 @keyframes orb-rotate {
-  0% { transform: rotate(0deg); }
-  50% { transform: rotate(180deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+
+  50% {
+    transform: rotate(180deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 .orb-inner {
@@ -53,18 +59,16 @@
   border-radius: 50%;
   /* Dynamic Color 1 */
   background: var(--color-1, #1E5BFF);
-  clip-path: polygon(
-    50% 0%,
-    61% 35%,
-    98% 35%,
-    68% 57%,
-    79% 91%,
-    50% 70%,
-    21% 91%,
-    32% 57%,
-    2% 35%,
-    39% 35%
-  );
+  clip-path: polygon(50% 0%,
+      61% 35%,
+      98% 35%,
+      68% 57%,
+      79% 91%,
+      50% 70%,
+      21% 91%,
+      32% 57%,
+      2% 35%,
+      39% 35%);
   animation: inner-rotate var(--animation-speed, 6s) linear infinite;
   transition: width 0.1s linear, background-color 0.5s ease;
 }
@@ -77,23 +81,68 @@
   /* Dynamic Color 2 */
   background: var(--color-2, #6FD8FF);
   animation-duration: calc(var(--animation-speed, 6s) * 1.33);
-  clip-path: polygon(
-    20% 0%,
-    0% 20%,
-    30% 50%,
-    0% 80%,
-    20% 100%,
-    50% 70%,
-    80% 100%,
-    100% 80%,
-    70% 50%,
-    100% 20%,
-    80% 0%,
-    50% 30%
-  );
+  clip-path: polygon(20% 0%,
+      0% 20%,
+      30% 50%,
+      0% 80%,
+      20% 100%,
+      50% 70%,
+      80% 100%,
+      100% 80%,
+      70% 50%,
+      100% 20%,
+      80% 0%,
+      50% 30%);
 }
 
 @keyframes inner-rotate {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Vignette Animations */
+@keyframes vignette-rotate {
+  0% {
+    transform: scale(1.5) rotate(0deg);
+  }
+
+  100% {
+    transform: scale(1.5) rotate(360deg);
+  }
+}
+
+.animate-vignette-rotate {
+  animation: vignette-rotate 15s linear infinite;
+  transform-origin: center;
+}
+
+@keyframes vignette-pulse {
+  0% {
+    transform: scale(1) translate(0, 0);
+    opacity: 0.8;
+  }
+
+  33% {
+    transform: scale(1.15) translate(-2%, -2%);
+    opacity: 1;
+  }
+
+  66% {
+    transform: scale(1.1) translate(2%, 1%);
+    opacity: 0.9;
+  }
+
+  100% {
+    transform: scale(1) translate(0, 0);
+    opacity: 0.8;
+  }
+}
+
+.animate-vignette-pulse {
+  animation: vignette-pulse 6s ease-in-out infinite;
 }

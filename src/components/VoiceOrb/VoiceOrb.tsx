@@ -9,6 +9,7 @@ export const VoiceOrb: React.FC = () => {
   const currentState = useOrbStore((state) => state.state);
   const currentMood = useOrbStore((state) => state.mood);
   const intensity = useOrbStore((state) => state.intensity);
+  const theme = useOrbStore((state) => state.theme);
 
   useEffect(() => {
     let animationFrameId: number;
@@ -62,19 +63,20 @@ export const VoiceOrb: React.FC = () => {
   }, [currentState, intensity]); // Re-run effect if intensity or state changes
 
   // Map Moods to unique internal orb colors
-  const getMoodColors = (mood: Mood) => {
+  const getMoodColors = (mood: Mood, currentTheme: 'dark' | 'light') => {
+    const isLight = currentTheme === 'light';
     switch (mood) {
-      case Mood.Calm: return { c1: '#1E5BFF', c2: '#6FD8FF' }; // Deep Blue & Cyan
-      case Mood.Happy: return { c1: '#FF9900', c2: '#FFD700' }; // Orange & Gold
-      case Mood.Excited: return { c1: '#FF2A00', c2: '#FF8800' }; // Crimson & Orange
-      case Mood.Curious: return { c1: '#00FF88', c2: '#00FFFF' }; // Mint & Cyan
-      case Mood.Serious: return { c1: '#880022', c2: '#440055' }; // Dark Red & Deep Purple
-      case Mood.Sad: return { c1: '#224466', c2: '#112244' }; // Slate & Midnight
-      case Mood.Confident: return { c1: '#8800FF', c2: '#FF00AA' }; // Purple & Hot Pink
-      case Mood.Friendly: return { c1: '#FF55AA', c2: '#FFDD55' }; // Pink & Warm Yellow
-      case Mood.Playful: return { c1: '#00FF44', c2: '#FF00AA' }; // Lime & Pink
-      case Mood.Focused: return { c1: '#FFFFFF', c2: '#88CCFF' }; // White & Ice Blue
-      default: return { c1: '#1E5BFF', c2: '#6FD8FF' };
+      case Mood.Calm: return isLight ? { c1: '#0a3299', c2: '#1699cc' } : { c1: '#1E5BFF', c2: '#6FD8FF' }; 
+      case Mood.Happy: return isLight ? { c1: '#cc7a00', c2: '#cca800' } : { c1: '#FF9900', c2: '#FFD700' };
+      case Mood.Excited: return isLight ? { c1: '#cc2200', c2: '#cc6d00' } : { c1: '#FF2A00', c2: '#FF8800' };
+      case Mood.Curious: return isLight ? { c1: '#00cc6d', c2: '#00cccc' } : { c1: '#00FF88', c2: '#00FFFF' };
+      case Mood.Serious: return isLight ? { c1: '#66001a', c2: '#330040' } : { c1: '#880022', c2: '#440055' };
+      case Mood.Sad: return isLight ? { c1: '#172e45', c2: '#0b172e' } : { c1: '#224466', c2: '#112244' };
+      case Mood.Confident: return isLight ? { c1: '#6600cc', c2: '#cc0088' } : { c1: '#8800FF', c2: '#FF00AA' };
+      case Mood.Friendly: return isLight ? { c1: '#cc4488', c2: '#ccb144' } : { c1: '#FF55AA', c2: '#FFDD55' };
+      case Mood.Playful: return isLight ? { c1: '#00cc36', c2: '#cc0088' } : { c1: '#00FF44', c2: '#FF00AA' };
+      case Mood.Focused: return isLight ? { c1: '#999999', c2: '#5ca3cc' } : { c1: '#FFFFFF', c2: '#88CCFF' };
+      default: return isLight ? { c1: '#0a3299', c2: '#1699cc' } : { c1: '#1E5BFF', c2: '#6FD8FF' };
     }
   };
 
@@ -94,19 +96,27 @@ export const VoiceOrb: React.FC = () => {
     }
   };
 
-  const colors = getMoodColors(currentMood);
+  const colors = getMoodColors(currentMood, theme);
   const vignette = getStateVignette(currentState, intensity);
 
   return (
-    <div className="w-full h-full absolute inset-0 z-0 bg-black">
-      <div className="orb-wrapper">
+    <div className="w-full h-full absolute inset-0 z-0 overflow-hidden">
+      <div 
+        className="orb-wrapper transition-transform duration-700 ease-in-out"
+        style={{
+          // Move the orb down by 35% of the screen height when active (listening/speaking)
+          transform: currentState === OrbState.Idle ? 'translateY(0)' : 'translateY(35vh)',
+        }}
+      >
         {/* Pass the colors to CSS as style variables */}
         <div 
           className="orb-container" 
           ref={orbRef}
           style={{ 
             '--color-1': colors.c1, 
-            '--color-2': colors.c2 
+            '--color-2': colors.c2,
+            '--orb-bg': theme === 'light' ? '#ffffff' : '#060606',
+            '--glow-color': theme === 'light' ? 'rgba(0,0,0,0.15)' : 'rgba(255,255,255,0.4)',
           } as React.CSSProperties}
         >
           <div className="orb">
@@ -118,10 +128,14 @@ export const VoiceOrb: React.FC = () => {
       
       {/* State Vignette - dynamically changes background ambient light based on State */}
       <div 
-        className="absolute inset-0 pointer-events-none transition-colors duration-1000 ease-in-out" 
+        className={`absolute inset-0 pointer-events-none transition-all duration-1000 ease-in-out ${
+          currentState === OrbState.Thinking ? 'animate-vignette-rotate' : ''
+        } ${
+          currentState === OrbState.Speaking ? 'animate-vignette-pulse' : ''
+        }`}
         style={{ 
-          background: `radial-gradient(circle at center, transparent 20%, ${vignette} 100%)`,
-          mixBlendMode: 'screen',
+          background: `radial-gradient(ellipse at 40% 60%, transparent 20%, ${vignette} 100%)`,
+          mixBlendMode: theme === 'light' ? 'multiply' : 'screen',
         }} 
       />
     </div>
