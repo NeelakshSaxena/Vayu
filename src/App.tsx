@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
+import chatbotIcon from './assets/chatbot.png';
 import { VoiceOrb } from './components/VoiceOrb/VoiceOrb';
+import { ChatUI } from './components/ChatUI';
 import { useOrbStore } from './stores/useOrbStore';
 import { Mood, OrbState } from './types';
 import { audioAnalyzer } from './utils/AudioAnalyzer';
@@ -23,6 +25,8 @@ function App() {
   const [messages, setMessages] = useState<Message[]>([]);
 
   const [showDevControls, setShowDevControls] = useState(false);
+  const appMode = useOrbStore((state) => state.appMode);
+  const setAppMode = useOrbStore((state) => state.setAppMode);
   
   const messagesRef = useRef<Message[]>([]);
   useEffect(() => {
@@ -33,7 +37,7 @@ function App() {
     try {
       setState(OrbState.Thinking);
 
-      const aiMessageId = Date.now().toString();
+      const aiMessageId = Date.now().toString() + Math.random().toString(36).substring(2);
       setMessages((prev) => [...prev, { id: aiMessageId, role: 'model', text: "" }]);
 
       const stream = (await openrouter.chat.send({
@@ -136,11 +140,10 @@ function App() {
         return;
       }
 
-      setMessages((prev) => {
-        const finalMsg: Message = { id: Date.now().toString(), role: 'user', text: finalText };
-        generateAIResponse([...messagesRef.current, finalMsg]);
-        return [...prev, finalMsg];
-      });
+      const finalMsg: Message = { id: Date.now().toString() + Math.random().toString(36).substring(2), role: 'user', text: finalText };
+      const newMessages = [...messagesRef.current, finalMsg];
+      setMessages(newMessages);
+      generateAIResponse(newMessages);
 
     } catch (error: any) {
       console.error("Sarvam STT Error:", error);
@@ -153,6 +156,7 @@ function App() {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.code === 'Space' && !e.repeat) {
+        if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
         e.preventDefault();
         startMic();
       }
@@ -160,6 +164,7 @@ function App() {
     
     const handleKeyUp = (e: KeyboardEvent) => {
       if (e.code === 'Space') {
+        if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
         e.preventDefault();
         stopMic();
       }
@@ -172,23 +177,32 @@ function App() {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
     };
-  }, []);
+  }, [appMode]);
+
+  const handleSendMessage = (text: string) => {
+    const finalMsg: Message = { id: Date.now().toString() + Math.random().toString(36).substring(2), role: 'user', text };
+    const newMessages = [...messagesRef.current, finalMsg];
+    setMessages(newMessages);
+    generateAIResponse(newMessages);
+  };
 
   return (
-    <div className={cn("w-full h-full relative font-sans overflow-hidden transition-colors duration-1000", theme === 'dark' ? "text-white bg-[#161618]" : "text-gray-900 bg-gray-50")}>
+    <div className={cn("w-full h-full relative font-sans overflow-hidden transition-colors duration-1000", theme, theme === 'dark' ? "text-white bg-[#161618]" : "text-gray-900 bg-gray-50")}>
       {/* Animated Grid Pattern behind everything */}
-      <AnimatedGridPattern
-        numSquares={50}
-        maxOpacity={0.15}
-        duration={3}
-        repeatDelay={1}
-        className={cn(
-          "[mask-image:radial-gradient(800px_circle_at_center,white,transparent)]",
-          "inset-x-0 inset-y-[-30%] h-[160%] skew-y-12 z-0"
-        )}
-      />
+      <div className="absolute inset-0 z-0 transition-opacity duration-1000 opacity-100">
+        <AnimatedGridPattern
+          numSquares={50}
+          maxOpacity={0.15}
+          duration={3}
+          repeatDelay={1}
+          className={cn(
+            "[mask-image:radial-gradient(800px_circle_at_center,white,transparent)]",
+            "inset-x-0 inset-y-[-30%] h-[160%] skew-y-12"
+          )}
+        />
+      </div>
       
-      <div className="z-10 absolute inset-0 pointer-events-none">
+      <div className={cn("z-10 absolute inset-0 transition-opacity duration-500", appMode === 'hands-free' ? "opacity-100 pointer-events-none" : "opacity-0 pointer-events-none")}>
         <VoiceOrb />
       </div>
       
@@ -200,13 +214,31 @@ function App() {
         </div>
       )}
 
-      <Transcript messages={messages} isActive={state !== OrbState.Idle} />
+      {appMode === 'hands-free' ? (
+        <Transcript messages={messages} isActive={state !== OrbState.Idle} />
+      ) : (
+        <div className="absolute inset-0 z-10">
+          <ChatUI messages={messages} onSendMessage={handleSendMessage} currentState={state} />
+        </div>
+      )}
 
       {/* Top Navigation Bar mimicking the screenshot */}
       <div className="absolute top-0 w-full p-8 flex justify-between items-start z-20 pointer-events-none">
         <div className="flex-1" />
-        <div className={cn("backdrop-blur-md px-6 py-2 rounded-full border text-sm font-medium transition-colors", theme === 'dark' ? "bg-white/10 border-white/5 text-white/80" : "bg-black/10 border-black/5 text-black/80")}>
-          <LiveClock />
+        <div className={cn("backdrop-blur-md p-1 rounded-full border text-sm font-medium transition-colors flex items-center pointer-events-auto", theme === 'dark' ? "bg-white/10 border-white/5 text-white/80" : "bg-black/10 border-black/5 text-black/80")}>
+          <img src={chatbotIcon} alt="Logo" className={cn("w-6 h-6 mx-3", theme === 'dark' ? "invert" : "")} />
+          <button 
+            onClick={() => setAppMode('hands-free')} 
+            className={cn("px-4 py-1.5 rounded-full transition-colors", appMode === 'hands-free' ? (theme === 'dark' ? 'bg-white text-black' : 'bg-black text-white') : 'hover:bg-white/10')}
+          >
+            Hands-free mode
+          </button>
+          <button 
+            onClick={() => setAppMode('hands-on')} 
+            className={cn("px-4 py-1.5 rounded-full transition-colors", appMode === 'hands-on' ? (theme === 'dark' ? 'bg-white text-black' : 'bg-black text-white') : 'hover:bg-white/10')}
+          >
+            Hands-on mode
+          </button>
         </div>
         <div className="flex gap-4 flex-1 justify-end">
           <div 
@@ -313,20 +345,6 @@ const MicVisualizer = ({ theme = 'dark' }: { theme?: 'dark' | 'light' }) => {
       </div>
       <div className={cn("text-xs font-mono w-12", theme === 'dark' ? "text-white/50" : "text-black/50")}>{(vol * 100).toFixed(1)}</div>
     </div>
-  );
-};
-
-const LiveClock = () => {
-  const [time, setTime] = useState(new Date());
-  useEffect(() => {
-    const id = setInterval(() => setTime(new Date()), 1000);
-    return () => clearInterval(id);
-  }, []);
-  
-  return (
-    <>
-      {time.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' })} &bull; {time.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
-    </>
   );
 };
 

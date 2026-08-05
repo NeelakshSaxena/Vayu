@@ -4,9 +4,15 @@ import { audioAnalyzer } from '../../utils/AudioAnalyzer';
 import { OrbState, Mood } from '../../types';
 import './VoiceOrb.css';
 
-export const VoiceOrb: React.FC = () => {
+export interface VoiceOrbProps {
+  isMini?: boolean;
+  orbStateOverride?: OrbState;
+}
+
+export const VoiceOrb: React.FC<VoiceOrbProps> = ({ isMini, orbStateOverride }) => {
   const orbRef = useRef<HTMLDivElement>(null);
-  const currentState = useOrbStore((state) => state.state);
+  const storeState = useOrbStore((state) => state.state);
+  const currentState = isMini && orbStateOverride !== undefined ? orbStateOverride : storeState;
   const currentMood = useOrbStore((state) => state.mood);
   const intensity = useOrbStore((state) => state.intensity);
   const theme = useOrbStore((state) => state.theme);
@@ -20,29 +26,34 @@ export const VoiceOrb: React.FC = () => {
       const audioData = audioAnalyzer.getAudioData();
       
       // Base sizes multiplied by user's intensity slider
-      let orbSize = 350;
-      let innerSize = 170;
+      let orbSize = isMini ? 40 : 350;
+      let innerSize = isMini ? 20 : 170;
       let glowIntensity = 1 * intensity;
       let animationSpeed = 6 / intensity;
 
       if (currentState === OrbState.Listening || currentState === OrbState.Speaking) {
-        // Massive scaling and glowing driven by volume and intensity
-        orbSize = 350 + (audioData.volume * 150 * intensity); 
-        innerSize = 170 + (audioData.mid * 80 * intensity);  
-        glowIntensity = (1 + audioData.volume * 15) * intensity;
-        
-        // Ensure animation speed doesn't hit 0 or go negative
-        animationSpeed = Math.max(0.5, (6 - audioData.volume * 5) / intensity);
+        if (!isMini) {
+          orbSize = 350 + (audioData.volume * 150 * intensity); 
+          innerSize = 170 + (audioData.mid * 80 * intensity);  
+          glowIntensity = (1 + audioData.volume * 15) * intensity;
+          animationSpeed = Math.max(0.5, (6 - audioData.volume * 5) / intensity);
+        } else {
+          const time = Date.now() / 1000;
+          orbSize = 40 + Math.sin(time * 15) * 4;
+          innerSize = 20 + Math.sin(time * 15) * 2;
+          glowIntensity = 1.5;
+          animationSpeed = 2;
+        }
       } else if (currentState === OrbState.Thinking) {
         // Thinking state pulses gently
         const time = Date.now() / 1000;
-        orbSize = 350 + Math.sin(time * 2) * (15 * intensity);
+        orbSize = (isMini ? 40 : 350) + Math.sin(time * 2) * (isMini ? 2 : 15 * intensity);
         glowIntensity = 2.0 * intensity;
         animationSpeed = 4 / intensity;
       } else if (currentState === OrbState.Error) {
         // Error state rapid jagged pulsing
         const time = Date.now() / 1000;
-        orbSize = 350 + Math.sin(time * 20) * (20 * intensity);
+        orbSize = (isMini ? 40 : 350) + Math.sin(time * 20) * (isMini ? 3 : 20 * intensity);
         glowIntensity = 3.0 * intensity;
       }
 
@@ -98,6 +109,28 @@ export const VoiceOrb: React.FC = () => {
 
   const colors = getMoodColors(currentMood, theme);
   const vignette = getStateVignette(currentState, intensity);
+
+  if (isMini) {
+    return (
+      <div 
+        className="orb-container" 
+        ref={orbRef}
+        style={{ 
+          position: 'relative',
+          top: 'auto', left: 'auto', transform: 'none',
+          '--color-1': colors.c1, 
+          '--color-2': colors.c2,
+          '--orb-bg': theme === 'light' ? '#ffffff' : '#060606',
+          '--glow-color': theme === 'light' ? 'rgba(0,0,0,0.15)' : 'rgba(255,255,255,0.4)',
+        } as React.CSSProperties}
+      >
+        <div className="orb">
+          <div className="orb-inner" />
+          <div className="orb-inner" />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full h-full absolute inset-0 z-0 overflow-hidden">
