@@ -1,13 +1,19 @@
 export const OrbState = {
-  Idle: 'Idle',
-  Listening: 'Listening',
-  Thinking: 'Thinking',
-  Speaking: 'Speaking',
-  Sleeping: 'Sleeping',
-  Error: 'Error',
+  Idle: "idle",
+  Listening: "listening",
+  Thinking: "thinking",
+  Speaking: "speaking",
+  Sleeping: "sleeping",
+  Error: "error"
 } as const;
 
 export type OrbState = typeof OrbState[keyof typeof OrbState];
+
+export interface Message {
+  id: string;
+  role: 'user' | 'model';
+  text: string;
+}
 
 export const Mood = {
   Calm: 'Calm',
