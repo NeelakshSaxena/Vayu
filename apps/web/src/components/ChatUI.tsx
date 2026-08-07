@@ -4,7 +4,6 @@ import { VoiceOrb } from './VoiceOrb/VoiceOrb';
 import { OrbState } from '../types';
 import chatbotIcon from '../assets/chatbot.png';
 import { useOrbStore } from '../stores/useOrbStore';
-import { cn } from '../lib/utils';
 import { Bubble, BubbleContent } from './ui/bubble';
 import { Response } from './ui/response';
 import { ShimmeringText } from './ui/shimmering-text';

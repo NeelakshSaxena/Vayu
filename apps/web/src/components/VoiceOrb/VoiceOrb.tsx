@@ -145,7 +145,7 @@ export const VoiceOrb: React.FC<VoiceOrbProps> = ({ isMini, orbStateOverride }) 
       >
         {/* Pass the colors to CSS as style variables */}
         <div 
-          className="orb-container" 
+          className="orb-container"
           ref={orbRef}
           style={{ 
             '--color-1': colors.c1, 

@@ -26,3 +26,9 @@ dist-ssr
 # models
 models/
 *.gguf
+
+# Python
+venv/
+.pytest_cache/
+__pycache__/
+*.pyc

@@ -80,7 +80,7 @@ const BubbleContent = React.forwardRef<HTMLDivElement, BubbleContentProps>(
     if (render) {
       return (
         <Slot ref={ref} className={cn(bubbleContentVariants({ variant, align }), className)} {...props}>
-          {React.cloneElement(render, {}, children || render.props.children)}
+          {React.cloneElement(render, {}, children || (render as any).props.children)}
         </Slot>
       )
     }

@@ -15,8 +15,8 @@ export const Transcript: React.FC<TranscriptProps> = ({ messages, isActive }) =>
   // We only show the UI if the orb is active (not idle) or if there are messages
   if (!isActive && messages.length === 0) return null;
 
-  // We only take the absolute latest message to display
-  const displayMessages = messages.length > 0 ? [messages[messages.length - 1]] : [];
+  // We take the latest non-empty message to display
+  const displayMessages = messages.filter(m => m.text.trim() !== '').slice(-1);
 
   return (
     <div className={`absolute inset-x-0 top-[100px] bottom-[35vh] flex flex-col items-center justify-center pointer-events-none z-10 transition-opacity duration-1000 ${isActive ? 'opacity-100' : 'opacity-0'}`}>

@@ -190,7 +190,7 @@ class AudioAnalyzer {
       return this.outSmoothedData;
     }
 
-    this.outAnalyser.getByteFrequencyData(this.outDataArray);
+    this.outAnalyser.getByteFrequencyData(this.outDataArray as any);
 
     let sum = 0;
     let bassSum = 0;
