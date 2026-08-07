@@ -17,3 +17,18 @@ body {
   color: white;
   user-select: none;
 }
+
+ @keyframes oled-pan {
+  0% { transform: translate(0, 0); }
+  100% { transform: translate(-40px, -40px); }
+}
+
+.animate-oled-pan {
+  animation: oled-pan 4s linear infinite;
+  /* Make grid 2 squares larger to hide the translation reset jump */
+  width: calc(100% + 80px) !important;
+  height: calc(100% + 80px) !important;
+  left: 0 !important;
+  top: 0 !important;
+}  
+ 
