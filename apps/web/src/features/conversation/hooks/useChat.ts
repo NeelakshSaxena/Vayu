@@ -1,5 +1,6 @@
 import { useConversationStore } from '../../../stores/useConversationStore';
 import { useOrbStore } from '../../../stores/useOrbStore';
+import { useSettingsStore } from '../../../stores/useSettingsStore';
 import { chatWebSocket } from '../../../services/websocket';
 import { playTTS } from '../../../services/audio/tts';
 import { OrbState } from '../../../types';
@@ -9,6 +10,7 @@ export const useChat = () => {
   const setMessages = useConversationStore((state) => state.setMessages);
   const setState = useOrbStore((state) => state.setState);
   const setErrorMessage = useOrbStore((state) => state.setErrorMessage);
+  const appMode = useSettingsStore((state) => state.appMode);
 
   const sendMessage = async (userMessage: string) => {
     setState(OrbState.Thinking);
@@ -37,6 +39,11 @@ export const useChat = () => {
         );
       },
       (fullResponse) => {
+        if (appMode === 'hands-on') {
+          setState(OrbState.Idle);
+          return;
+        }
+
         playTTS(
           fullResponse,
           () => setState(OrbState.Speaking),

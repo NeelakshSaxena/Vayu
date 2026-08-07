@@ -7,6 +7,21 @@
     <title>Vayu</title>
   </head>
   <body>
+    <script>
+      window.addEventListener('error', (e) => {
+        document.body.innerHTML += `<div style="color:red; background:white; position:fixed; top:0; left:0; right:0; bottom:0; z-index:9999; padding:40px; font-size:24px; font-family:monospace; overflow:auto;">
+          <strong>Error:</strong> ${e.message}<br/><br/>
+          <strong>Location:</strong> ${e.filename}:${e.lineno}<br/><br/>
+          <pre>${e.error ? e.error.stack : ''}</pre>
+        </div>`;
+      });
+      window.addEventListener('unhandledrejection', (e) => {
+        document.body.innerHTML += `<div style="color:red; background:white; position:fixed; top:0; left:0; right:0; bottom:0; z-index:9999; padding:40px; font-size:24px; font-family:monospace; overflow:auto;">
+          <strong>Unhandled Promise Rejection:</strong> ${e.reason ? (e.reason.message || e.reason) : e}<br/><br/>
+          <pre>${e.reason && e.reason.stack ? e.reason.stack : ''}</pre>
+        </div>`;
+      });
+    </script>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

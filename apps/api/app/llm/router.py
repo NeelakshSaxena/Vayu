@@ -1,5 +1,6 @@
 from typing import List, Dict, Any, AsyncGenerator
 from app.llm.provider import LLMProvider, MockLLMProvider
+from app.llm.providers.openrouter import OpenRouterProvider
 from app.core.tracing import trace_stage
 
 class LLMRouter:
@@ -8,8 +9,8 @@ class LLMRouter:
     """
     
     def __init__(self, default_provider: LLMProvider = None):
-        # Default to the mock provider for Phase 2
-        self.provider = default_provider or MockLLMProvider()
+        # Now using OpenRouter as the real backend
+        self.provider = default_provider or OpenRouterProvider()
         
     @trace_stage("llm.route_stream")
     async def route_stream(self, messages: List[Dict[str, Any]], **kwargs) -> AsyncGenerator[str, None]:
