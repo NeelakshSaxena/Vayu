@@ -23,7 +23,9 @@ export const VoiceOrb: React.FC<VoiceOrbProps> = ({ isMini, orbStateOverride }) 
     const updateAudioReactivity = () => {
       if (!orbRef.current) return;
 
-      const audioData = audioAnalyzer.getAudioData();
+      const audioData = currentState === OrbState.Speaking 
+        ? audioAnalyzer.getOutputAudioData()
+        : audioAnalyzer.getAudioData();
       
       // Base sizes multiplied by user's intensity slider
       let orbSize = isMini ? 40 : 350;

@@ -11,6 +11,7 @@ import { OpenRouter } from "@openrouter/sdk";
 
 import { AnimatedGridPattern } from './components/ui/animated-grid-pattern';
 import { cn } from './lib/utils';
+import systemPrompt from '../systemp-prompt.md?raw';
 
 // Initialize OpenRouter
 const openrouter = new OpenRouter({
@@ -19,12 +20,49 @@ const openrouter = new OpenRouter({
 
 const DEFAULT_MODEL = import.meta.env.VITE_OPEN_ROUTER_MODEL || "openrouter/free";
 
+function writeString(view: DataView, offset: number, string: string) {
+  for (let i = 0; i < string.length; i++) {
+    view.setUint8(offset + i, string.charCodeAt(i));
+  }
+}
+
+function pcmToWav(pcmData: ArrayBuffer, sampleRate = 44100, numChannels = 1) {
+  const bytesPerSample = 2; // 16-bit PCM
+  const byteRate = sampleRate * numChannels * bytesPerSample;
+  const blockAlign = numChannels * bytesPerSample;
+  const dataSize = pcmData.byteLength;
+  const buffer = new ArrayBuffer(44 + dataSize);
+  const view = new DataView(buffer);
+
+  writeString(view, 0, 'RIFF');
+  view.setUint32(4, 36 + dataSize, true);
+  writeString(view, 8, 'WAVE');
+
+  writeString(view, 12, 'fmt ');
+  view.setUint32(16, 16, true);
+  view.setUint16(20, 1, true);
+  view.setUint16(22, numChannels, true);
+  view.setUint32(24, sampleRate, true);
+  view.setUint32(28, byteRate, true);
+  view.setUint16(32, blockAlign, true);
+  view.setUint16(34, bytesPerSample * 8, true);
+
+  writeString(view, 36, 'data');
+  view.setUint32(40, dataSize, true);
+
+  new Uint8Array(buffer, 44).set(new Uint8Array(pcmData));
+
+  return buffer;
+}
+
 function App() {
   const { state, mood, setState, setMood, theme, setTheme, errorMessage, setErrorMessage } = useOrbStore();
   const [micActive, setMicActive] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
 
   const [showDevControls, setShowDevControls] = useState(false);
+  const [testModelResponse, setTestModelResponse] = useState("Precise model response testing...");
+  const [simulatedUserInput, setSimulatedUserInput] = useState("");
   const appMode = useOrbStore((state) => state.appMode);
   const setAppMode = useOrbStore((state) => state.setAppMode);
   
@@ -32,6 +70,59 @@ function App() {
   useEffect(() => {
     messagesRef.current = messages;
   }, [messages]);
+
+  const ttsAudioRef = useRef<HTMLAudioElement | null>(null);
+
+  const playTTS = async (text: string) => {
+    try {
+      const apiKey = import.meta.env.VITE_OPEN_ROUTER_KEY || "";
+      const response = await fetch("https://openrouter.ai/api/v1/audio/speech", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${apiKey}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          model: "fish-audio/s2.1-pro-free:free",
+          input: text
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`TTS failed: ${response.status} ${await response.text()}`);
+      }
+
+      const pcmBuffer = await response.arrayBuffer();
+      const wavBuffer = pcmToWav(pcmBuffer, 44100, 1);
+      const blob = new Blob([wavBuffer], { type: 'audio/wav' });
+      const url = URL.createObjectURL(blob);
+      
+      const audio = ttsAudioRef.current;
+      if (!audio) return;
+      
+      audio.src = url;
+      audio.crossOrigin = "anonymous";
+      
+      // Attach this audio element to the output analyzer so it can be visualized
+      audioAnalyzer.attachOutput(audio);
+      
+      audio.onplay = () => setState(OrbState.Speaking);
+      audio.onended = () => {
+        setState(OrbState.Idle);
+        URL.revokeObjectURL(url);
+      };
+      
+      await audio.play();
+    } catch (err: any) {
+      console.error("TTS Error:", err);
+      setErrorMessage(`Audio Error: ${err.message}`);
+      setState(OrbState.Error);
+      setTimeout(() => { 
+        setState(OrbState.Idle); 
+        setErrorMessage(null); 
+      }, 8000);
+    }
+  };
 
   const generateAIResponse = async (chatHistory: Message[]) => {
     try {
@@ -43,19 +134,23 @@ function App() {
       const stream = (await openrouter.chat.send({
         chatRequest: {
           model: DEFAULT_MODEL,
-          messages: chatHistory.map(msg => ({
-            role: msg.role === 'model' ? 'assistant' : msg.role,
-            content: msg.text
-          }) as any),
+          messages: [
+            { role: 'system', content: systemPrompt },
+            ...chatHistory.map(msg => ({
+              role: msg.role === 'model' ? 'assistant' : msg.role,
+              content: msg.text
+            }) as any)
+          ],
           stream: true
         }
       })) as any;
 
-      setState(OrbState.Speaking);
+      let fullResponse = "";
 
       for await (const chunk of stream) {
         const content = chunk.choices[0]?.delta?.content;
         if (content) {
+          fullResponse += content;
           setMessages((prev) => 
             prev.map(msg => 
               msg.id === aiMessageId 
@@ -66,9 +161,7 @@ function App() {
         }
       }
 
-      setTimeout(() => {
-        setState(OrbState.Idle);
-      }, 5000);
+      await playTTS(fullResponse);
 
     } catch (error: any) {
       console.error("OpenRouter Error:", error);
@@ -188,6 +281,7 @@ function App() {
 
   return (
     <div className={cn("w-full h-full relative font-sans overflow-hidden transition-colors duration-1000", theme, theme === 'dark' ? "text-white bg-[#161618]" : "text-gray-900 bg-gray-50")}>
+      <audio ref={ttsAudioRef} className="hidden" />
       {/* Animated Grid Pattern behind everything */}
       <div className="absolute inset-0 z-0 transition-opacity duration-1000 opacity-100">
         <AnimatedGridPattern
@@ -310,8 +404,57 @@ function App() {
         </div>
 
         <div className={cn("flex flex-col gap-2 mt-2 pt-4 border-t", theme === 'dark' ? "border-white/10" : "border-black/10")}>
-          <label className={cn("text-xs uppercase tracking-widest", theme === 'dark' ? "text-white/50" : "text-black/50")}>Mic Input Level</label>
-          <MicVisualizer theme={theme} />
+          <div className="flex gap-8">
+            <div className="flex flex-col gap-2">
+              <label className={cn("text-xs uppercase tracking-widest", theme === 'dark' ? "text-white/50" : "text-black/50")}>Mic Input Level</label>
+              <MicVisualizer theme={theme} />
+            </div>
+            <div className="flex flex-col gap-2">
+              <label className={cn("text-xs uppercase tracking-widest", theme === 'dark' ? "text-white/50" : "text-black/50")}>Audio Output Level</label>
+              <OutputVisualizer theme={theme} />
+            </div>
+          </div>
+        </div>
+
+        <div className={cn("flex flex-col gap-2 mt-2 pt-4 border-t", theme === 'dark' ? "border-white/10" : "border-black/10")}>
+          <label className={cn("text-xs uppercase tracking-widest", theme === 'dark' ? "text-white/50" : "text-black/50")}>Simulate User Message</label>
+          <textarea 
+            value={simulatedUserInput}
+            onChange={(e) => setSimulatedUserInput(e.target.value)}
+            className={`w-full h-16 p-2 text-sm rounded bg-transparent border outline-none ${theme === 'dark' ? 'border-white/20 text-white focus:border-white/50' : 'border-black/20 text-black focus:border-black/50'}`}
+            placeholder="Type a message to simulate..."
+          />
+          <button 
+            onClick={() => {
+              if (!simulatedUserInput.trim()) return;
+              handleSendMessage(simulatedUserInput);
+              setSimulatedUserInput("");
+            }}
+            className="bg-green-600 text-white px-3 py-1.5 rounded text-xs hover:bg-green-500 transition-colors font-semibold"
+          >
+            Send Message
+          </button>
+        </div>
+
+        <div className={cn("flex flex-col gap-2 mt-2 pt-4 border-t", theme === 'dark' ? "border-white/10" : "border-black/10")}>
+          <label className={cn("text-xs uppercase tracking-widest", theme === 'dark' ? "text-white/50" : "text-black/50")}>Test Speaking Mode</label>
+          <textarea 
+            value={testModelResponse}
+            onChange={(e) => setTestModelResponse(e.target.value)}
+            className={`w-full h-20 p-2 text-sm rounded bg-transparent border outline-none ${theme === 'dark' ? 'border-white/20 text-white focus:border-white/50' : 'border-black/20 text-black focus:border-black/50'}`}
+            placeholder="Enter placeholder text..."
+          />
+          <button 
+            onClick={() => {
+              setState(OrbState.Speaking);
+              const aiMessageId = Date.now().toString() + Math.random().toString(36).substring(2);
+              setMessages((prev) => [...prev, { id: aiMessageId, role: 'model', text: testModelResponse }]);
+              setTimeout(() => setState(OrbState.Idle), 5000);
+            }}
+            className="bg-blue-600 text-white px-3 py-1.5 rounded text-xs hover:bg-blue-500 transition-colors font-semibold"
+          >
+            Simulate Model Response
+          </button>
         </div>
       </div>
       )}
@@ -339,6 +482,34 @@ const MicVisualizer = ({ theme = 'dark' }: { theme?: 'dark' | 'light' }) => {
           <div 
             key={i} 
             className="w-2 bg-green-400 rounded-t transition-all duration-75" 
+            style={{ height: `${Math.max(10, (vol * 150) - (i * 10))}%`, opacity: vol > 0.01 ? 1 : 0.3 }} 
+          />
+        ))}
+      </div>
+      <div className={cn("text-xs font-mono w-12", theme === 'dark' ? "text-white/50" : "text-black/50")}>{(vol * 100).toFixed(1)}</div>
+    </div>
+  );
+};
+
+const OutputVisualizer = ({ theme = 'dark' }: { theme?: 'dark' | 'light' }) => {
+  const [vol, setVol] = useState(0);
+  useEffect(() => {
+    let id: number;
+    const loop = () => {
+      setVol(audioAnalyzer.getOutputAudioData().volume);
+      id = requestAnimationFrame(loop);
+    };
+    loop();
+    return () => cancelAnimationFrame(id);
+  }, []);
+
+  return (
+    <div className="flex items-center gap-2 h-8">
+      <div className="flex gap-1 items-end h-full">
+        {Array.from({ length: 5 }).map((_, i) => (
+          <div 
+            key={i} 
+            className="w-2 bg-blue-400 rounded-t transition-all duration-75" 
             style={{ height: `${Math.max(10, (vol * 150) - (i * 10))}%`, opacity: vol > 0.01 ? 1 : 0.3 }} 
           />
         ))}

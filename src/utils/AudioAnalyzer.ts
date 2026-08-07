@@ -22,6 +22,20 @@ class AudioAnalyzer {
     silence: true,
   };
 
+  private outContext: AudioContext | null = null;
+  private outAnalyser: AnalyserNode | null = null;
+  private outDataArray: Uint8Array | null = null;
+  private outSource: MediaElementAudioSourceNode | null = null;
+  private outAudioElement: HTMLAudioElement | null = null;
+  private outSmoothedData: AudioData = {
+    volume: 0,
+    bass: 0,
+    mid: 0,
+    treble: 0,
+    speaking: false,
+    silence: true,
+  };
+
   private smoothingFactor = 0.8;
   private silenceThreshold = 0.05;
 
@@ -131,6 +145,85 @@ class AudioAnalyzer {
     this.smoothedData.silence = !this.smoothedData.speaking;
 
     return this.smoothedData;
+  }
+
+  public attachOutput(audioElement: HTMLAudioElement) {
+    if (this.outAudioElement === audioElement) {
+      if (this.outContext?.state === 'suspended') {
+        this.outContext.resume();
+      }
+      return;
+    }
+
+    if (!this.outContext) {
+      this.outContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+    }
+    
+    if (!this.outAnalyser) {
+      this.outAnalyser = this.outContext.createAnalyser();
+      this.outAnalyser.fftSize = 512;
+      this.outAnalyser.smoothingTimeConstant = 0.5;
+      this.outDataArray = new Uint8Array(this.outAnalyser.frequencyBinCount);
+      this.outAnalyser.connect(this.outContext.destination);
+    }
+
+    if (this.outSource) {
+      this.outSource.disconnect();
+    }
+
+    try {
+      this.outSource = this.outContext.createMediaElementSource(audioElement);
+      this.outSource.connect(this.outAnalyser);
+      this.outAudioElement = audioElement;
+    } catch (e) {
+      console.warn("MediaElementSource creation failed:", e);
+    }
+    
+    // Resume context if it was suspended due to async execution delays
+    if (this.outContext.state === 'suspended') {
+      this.outContext.resume();
+    }
+  }
+
+  public getOutputAudioData(): AudioData {
+    if (!this.outAnalyser || !this.outDataArray) {
+      return this.outSmoothedData;
+    }
+
+    this.outAnalyser.getByteFrequencyData(this.outDataArray);
+
+    let sum = 0;
+    let bassSum = 0;
+    let midSum = 0;
+    let trebleSum = 0;
+
+    const length = this.outDataArray.length;
+    const bassEnd = Math.floor(length * 0.1);
+    const midEnd = Math.floor(length * 0.6);
+
+    for (let i = 0; i < length; i++) {
+      const val = this.outDataArray[i] / 255.0;
+      sum += val;
+
+      if (i < bassEnd) bassSum += val;
+      else if (i < midEnd) midSum += val;
+      else trebleSum += val;
+    }
+
+    const volume = sum / length;
+    const bass = bassSum / bassEnd;
+    const mid = midSum / (midEnd - bassEnd);
+    const treble = trebleSum / (length - midEnd);
+
+    this.outSmoothedData.volume = this.lerp(this.outSmoothedData.volume, volume, 1 - this.smoothingFactor);
+    this.outSmoothedData.bass = this.lerp(this.outSmoothedData.bass, bass, 1 - this.smoothingFactor);
+    this.outSmoothedData.mid = this.lerp(this.outSmoothedData.mid, mid, 1 - this.smoothingFactor);
+    this.outSmoothedData.treble = this.lerp(this.outSmoothedData.treble, treble, 1 - this.smoothingFactor);
+
+    this.outSmoothedData.speaking = this.outSmoothedData.volume > this.silenceThreshold;
+    this.outSmoothedData.silence = !this.outSmoothedData.speaking;
+
+    return this.outSmoothedData;
   }
 
   public stop() {
