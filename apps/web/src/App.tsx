@@ -11,8 +11,6 @@ import type { Message } from './components/Transcript';
 import { AnimatedGridPattern } from './components/ui/animated-grid-pattern';
 import { useScreensaver } from './hooks/useScreensaver';
 import { cn } from './lib/utils';
-// Note: systemPrompt is now managed by the backend, so we don't strictly need it here, but leaving it for reference or future UI needs.
-import systemPrompt from '../systemp-prompt.md?raw';
 
 function writeString(view: DataView, offset: number, string: string) {
   for (let i = 0; i < string.length; i++) {

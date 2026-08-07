@@ -1,4 +1,5 @@
 from typing import List, Dict, Any
+import os
 from app.core.tracing import trace_stage
 
 class PromptAssembler:
@@ -7,8 +8,16 @@ class PromptAssembler:
     Combines the system template, retrieved context, and the user's message.
     """
     
-    def __init__(self, system_template: str = "You are Vayu, a helpful AI assistant."):
-        self.system_template = system_template
+    def __init__(self, system_template: str = None):
+        if system_template is None:
+            prompt_path = os.path.join(os.path.dirname(__file__), "system_prompt.md")
+            try:
+                with open(prompt_path, "r", encoding="utf-8") as f:
+                    self.system_template = f.read()
+            except FileNotFoundError:
+                self.system_template = "You are Vayu, a helpful AI assistant."
+        else:
+            self.system_template = system_template
         
     @trace_stage("prompt.assemble")
     def assemble(self, user_message: str, context: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
