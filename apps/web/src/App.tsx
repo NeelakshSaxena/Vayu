@@ -7,19 +7,12 @@ import { Mood, OrbState } from './types';
 import { audioAnalyzer } from './utils/AudioAnalyzer';
 import { Transcript } from './components/Transcript';
 import type { Message } from './components/Transcript';
-import { OpenRouter } from "@openrouter/sdk";
 
 import { AnimatedGridPattern } from './components/ui/animated-grid-pattern';
 import { useScreensaver } from './hooks/useScreensaver';
 import { cn } from './lib/utils';
+// Note: systemPrompt is now managed by the backend, so we don't strictly need it here, but leaving it for reference or future UI needs.
 import systemPrompt from '../systemp-prompt.md?raw';
-
-// Initialize OpenRouter
-const openrouter = new OpenRouter({
-  apiKey: import.meta.env.VITE_OPEN_ROUTER_KEY || "",
-});
-
-const DEFAULT_MODEL = import.meta.env.VITE_OPEN_ROUTER_MODEL || "openrouter/free";
 
 function writeString(view: DataView, offset: number, string: string) {
   for (let i = 0; i < string.length; i++) {
@@ -73,6 +66,7 @@ function App() {
   const messagesRef = useRef<Message[]>([]);
   const recognitionRef = useRef<any>(null);
   const silenceTimerRef = useRef<any>(null);
+  const wsRef = useRef<WebSocket | null>(null);
 
   useEffect(() => {
     messagesRef.current = messages;
@@ -138,41 +132,61 @@ function App() {
       const aiMessageId = Date.now().toString() + Math.random().toString(36).substring(2);
       setMessages((prev) => [...prev, { id: aiMessageId, role: 'model', text: "" }]);
 
-      const stream = (await openrouter.chat.send({
-        chatRequest: {
-          model: DEFAULT_MODEL,
-          messages: [
-            { role: 'system', content: systemPrompt },
-            ...chatHistory.map(msg => ({
-              role: msg.role === 'model' ? 'assistant' : msg.role,
-              content: msg.text
-            }) as any)
-          ],
-          stream: true
-        }
-      })) as any;
+      const userMessage = chatHistory[chatHistory.length - 1].text;
+
+      let ws = wsRef.current;
+      if (!ws || ws.readyState !== WebSocket.OPEN) {
+        ws = new WebSocket('ws://localhost:8000/api/chat/ws');
+        wsRef.current = ws;
+        await new Promise((resolve, reject) => {
+          ws!.onopen = resolve;
+          ws!.onerror = reject;
+        });
+      }
 
       let fullResponse = "";
 
-      for await (const chunk of stream) {
-        const content = chunk.choices[0]?.delta?.content;
-        if (content) {
-          fullResponse += content;
-          setMessages((prev) =>
-            prev.map(msg =>
-              msg.id === aiMessageId
-                ? { ...msg, text: msg.text + content }
-                : msg
-            )
-          );
+      ws.onmessage = async (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          if (data.type === "start") {
+             // Stream starting
+          } else if (data.type === "token") {
+             const content = data.content;
+             if (content) {
+                 fullResponse += content;
+                 setMessages((prev) =>
+                     prev.map(msg =>
+                         msg.id === aiMessageId
+                         ? { ...msg, text: msg.text + content }
+                         : msg
+                     )
+                 );
+             }
+          } else if (data.type === "end") {
+             await playTTS(fullResponse);
+          }
+        } catch (e) {
+          console.error("Failed to parse websocket message", e);
         }
-      }
+      };
 
-      await playTTS(fullResponse);
+      ws.onerror = (error) => {
+        console.error("WebSocket Error:", error);
+        setErrorMessage("WebSocket Error");
+        setState(OrbState.Error);
+        setTimeout(() => { setState(OrbState.Idle); setErrorMessage(null); }, 3000);
+      };
+
+      ws.send(JSON.stringify({
+        type: "chat",
+        session_id: "default_session",
+        message: userMessage
+      }));
 
     } catch (error: any) {
-      console.error("OpenRouter Error:", error);
-      setErrorMessage(error.message || "Failed to generate AI response");
+      console.error("Connection Error:", error);
+      setErrorMessage(error.message || "Failed to connect to backend");
       setState(OrbState.Error);
       setTimeout(() => { setState(OrbState.Idle); setErrorMessage(null); }, 3000);
     }
