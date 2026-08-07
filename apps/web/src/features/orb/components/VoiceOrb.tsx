@@ -1,7 +1,8 @@
 import React, { useEffect, useRef } from 'react';
-import { useOrbStore } from '../../stores/useOrbStore';
-import { audioAnalyzer } from '../../utils/AudioAnalyzer';
-import { OrbState, Mood } from '../../types';
+import { useOrbStore } from '../../../stores/useOrbStore';
+import { audioAnalyzer } from '../../../services/audio/AudioAnalyzer';
+import { OrbState, Mood } from '../../../types';
+import { useSettingsStore } from '../../../stores/useSettingsStore';
 import './VoiceOrb.css';
 
 export interface VoiceOrbProps {
@@ -15,7 +16,7 @@ export const VoiceOrb: React.FC<VoiceOrbProps> = ({ isMini, orbStateOverride }) 
   const currentState = isMini && orbStateOverride !== undefined ? orbStateOverride : storeState;
   const currentMood = useOrbStore((state) => state.mood);
   const intensity = useOrbStore((state) => state.intensity);
-  const theme = useOrbStore((state) => state.theme);
+  const theme = useSettingsStore((state) => state.theme);
 
   useEffect(() => {
     let animationFrameId: number;

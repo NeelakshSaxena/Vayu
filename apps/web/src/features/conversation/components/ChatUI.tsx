@@ -1,24 +1,25 @@
 import React, { useState, useRef, useEffect } from 'react';
-import type { Message } from './Transcript';
-import { VoiceOrb } from './VoiceOrb/VoiceOrb';
-import { OrbState } from '../types';
-import chatbotIcon from '../assets/chatbot.png';
-import { useOrbStore } from '../stores/useOrbStore';
-import { Bubble, BubbleContent } from './ui/bubble';
-import { Response } from './ui/response';
-import { ShimmeringText } from './ui/shimmering-text';
+import type { Message } from '../../../types';
+import { OrbState } from '../../../types';
+import chatbotIcon from '../../../assets/chatbot.png';
+
+import { useSettingsStore } from '../../../stores/useSettingsStore';
+import { Bubble, BubbleContent } from '../../../components/ui/bubble';
+import { Response } from '../../../components/ui/response';
+import { ShimmeringText } from '../../../components/ui/shimmering-text';
 
 interface ChatUIProps {
   messages: Message[];
   onSendMessage: (text: string) => void;
   currentState: OrbState;
+  ModelAvatar?: React.ReactNode;
 }
 
-export const ChatUI: React.FC<ChatUIProps> = ({ messages, onSendMessage, currentState }) => {
+export const ChatUI: React.FC<ChatUIProps> = ({ messages, onSendMessage, currentState, ModelAvatar }) => {
   const [inputText, setInputText] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const theme = useOrbStore((state) => state.theme);
+  const theme = useSettingsStore((state) => state.theme);
 
   const scrollToBottom = () => {
     if (scrollContainerRef.current) {
@@ -54,7 +55,6 @@ export const ChatUI: React.FC<ChatUIProps> = ({ messages, onSendMessage, current
           {messages.map((msg, index) => {
             const isUser = msg.role === 'user';
             const isLatest = index === messages.length - 1;
-            const orbState = (!isUser && isLatest) ? currentState : OrbState.Idle;
 
             return (
               <div key={msg.id} className={`flex w-full ${isUser ? 'justify-end' : 'justify-start'}`}>
@@ -65,7 +65,7 @@ export const ChatUI: React.FC<ChatUIProps> = ({ messages, onSendMessage, current
                     {isUser ? (
                       <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" className={theme === 'dark' ? 'text-white' : 'text-black'}><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
                     ) : (
-                      <VoiceOrb isMini orbStateOverride={orbState} />
+                      ModelAvatar || null
                     )}
                   </div>
 

@@ -1,7 +1,7 @@
 import React, { useMemo, useRef } from 'react';
 import { motion, useInView } from 'motion/react';
 import { cn } from '../../lib/utils';
-import { useOrbStore } from '../../stores/useOrbStore';
+import { useSettingsStore } from '../../stores/useSettingsStore';
 
 export interface ShimmeringTextProps {
   text: string;
@@ -39,7 +39,7 @@ export function ShimmeringText({
     amount: "some" 
   });
   
-  const theme = useOrbStore((state) => state.theme);
+  const theme = useSettingsStore((state) => state.theme);
   const defaultColor = theme === 'dark' ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)';
   const defaultShimmer = theme === 'dark' ? '#ffffff' : '#000000';
 

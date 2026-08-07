@@ -1,8 +1,8 @@
 import React, { useRef, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
-import { useOrbStore } from '../../stores/useOrbStore';
-import { OrbState } from '../../types';
+import { useOrbStore } from '../../../stores/useOrbStore';
+import { OrbState } from '../../../types';
 
 export const Particles: React.FC = () => {
   const count = 300;

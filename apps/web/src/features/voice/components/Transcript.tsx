@@ -1,10 +1,5 @@
 import React from 'react';
-
-export interface Message {
-  id: string;
-  role: 'user' | 'model';
-  text: string;
-}
+import type { Message } from '../../../types';
 
 interface TranscriptProps {
   messages: Message[];
