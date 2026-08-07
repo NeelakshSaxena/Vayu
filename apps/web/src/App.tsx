@@ -59,6 +59,7 @@ function App() {
   const { state, mood, setState, setMood, theme, setTheme, errorMessage, setErrorMessage } = useOrbStore();
   const [micActive, setMicActive] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
+  const [interimTranscript, setInterimTranscript] = useState("");
 
   const [showDevControls, setShowDevControls] = useState(false);
   const [testModelResponse, setTestModelResponse] = useState("Precise model response testing...");
@@ -67,6 +68,9 @@ function App() {
   const setAppMode = useOrbStore((state) => state.setAppMode);
   
   const messagesRef = useRef<Message[]>([]);
+  const recognitionRef = useRef<any>(null);
+  const silenceTimerRef = useRef<any>(null);
+
   useEffect(() => {
     messagesRef.current = messages;
   }, [messages]);
@@ -189,11 +193,50 @@ function App() {
     audioAnalyzer.startRecording();
     setMicActive(true);
     setState(OrbState.Listening);
+    setInterimTranscript("");
+
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (SpeechRecognition) {
+      const recognition = new SpeechRecognition();
+      recognition.continuous = true;
+      recognition.interimResults = true;
+      
+      recognition.onresult = (event: any) => {
+        let interim = '';
+        for (let i = 0; i < event.results.length; ++i) {
+          interim += event.results[i][0].transcript;
+        }
+        setInterimTranscript(interim);
+        
+        // Reset 2-second silence timer
+        if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
+        silenceTimerRef.current = setTimeout(() => {
+          stopMic();
+        }, 2000);
+      };
+
+      recognition.onerror = (e: any) => console.error("Speech recognition error", e);
+      
+      recognition.start();
+      recognitionRef.current = recognition;
+
+      // Start the initial silence timer just in case they don't say anything
+      if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
+      silenceTimerRef.current = setTimeout(() => {
+        stopMic();
+      }, 5000);
+    }
   };
 
   const stopMic = async () => {
     if (!micActiveRef.current) return;
     
+    if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
+    if (recognitionRef.current) {
+      try { recognitionRef.current.stop(); } catch (e) {}
+      recognitionRef.current = null;
+    }
+
     setMicActive(false);
     setState(OrbState.Thinking);
     
@@ -230,9 +273,11 @@ function App() {
       if (!finalText || finalText.trim() === '') {
         // No speech detected
         setState(OrbState.Idle);
+        setInterimTranscript("");
         return;
       }
 
+      setInterimTranscript("");
       const finalMsg: Message = { id: Date.now().toString() + Math.random().toString(36).substring(2), role: 'user', text: finalText };
       const newMessages = [...messagesRef.current, finalMsg];
       setMessages(newMessages);
@@ -309,10 +354,10 @@ function App() {
       )}
 
       {appMode === 'hands-free' ? (
-        <Transcript messages={messages} isActive={state !== OrbState.Idle} />
+        <Transcript messages={interimTranscript ? [...messages, { id: 'interim', role: 'user', text: interimTranscript }] : messages} isActive={state !== OrbState.Idle} />
       ) : (
         <div className="absolute inset-0 z-10">
-          <ChatUI messages={messages} onSendMessage={handleSendMessage} currentState={state} />
+          <ChatUI messages={interimTranscript ? [...messages, { id: 'interim', role: 'user', text: interimTranscript }] : messages} onSendMessage={handleSendMessage} currentState={state} />
         </div>
       )}
 
