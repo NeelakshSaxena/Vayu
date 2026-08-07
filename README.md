@@ -1,120 +1,412 @@
-# Vayu Monorepo
+![Python](https://img.shields.io/badge/Python-3.12-blue)
+![Next.js](https://img.shields.io/badge/Next.js-15-black)
+![TypeScript](https://img.shields.io/badge/TypeScript-5-blue)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.116-green)
+![Status](https://img.shields.io/badge/Status-Phase%203-orange)
+![License](https://img.shields.io/badge/License-MIT-yellow)
 
-Welcome to the **Vayu** project repository. This project uses a monorepo architecture leveraging `pnpm` workspaces to manage isolated frontend apps, backend APIs, shared packages, and AI services.
+# Vayu (Versatile Artificial Intelligence, yet You-nique)
 
-## Project Structure
+> Your personal AI operating system.
+> An emotionally-aware, voice-first assistant, designed to think, remember, and assist naturally.
+
+---
+
+## Preview
+
+### Idle State
+
+![Idle](./assets/idle-state.png)
+
+---
+
+### Listening State
+
+![Listening](./assets/listening-state.png)
+
+---
+
+### Talking State
+
+![Talking](./assets/talking-state.png)
+
+---
+
+# Vision
+
+Ray isn't another chatbot.
+
+The goal is to build an AI companion that feels present rather than reactive.
+
+Instead of waiting for commands, Ray maintains context, understands emotion, remembers what matters, speaks naturally, and eventually becomes an operating layer for your digital life.
+
+Long-term objectives include:
+
+- Voice-first interaction
+- Long-term memory
+- Emotional intelligence
+- Dynamic reasoning
+- Tool execution
+- Local-first privacy
+- Multi-device synchronization
+- Personalization over time
+
+---
+
+# Current Status
+
+## Development Progress
+
+| Phase | Status |
+|--------|--------|
+| Phase 1 — Foundation | ✅ Completed |
+| Phase 2 — AI Runtime Pipeline | ✅ Completed |
+| Phase 3 — Memory System | 🚧 Starting |
+| Phase 4 — Emotional Intelligence | ⏳ Planned |
+| Phase 5 — Proactive Intelligence | ⏳ Planned |
+| Phase 6 — Full Assistant | ⏳ Planned |
+
+Current milestone:
+
+> **Beginning Phase 3 — Memory Architecture**
+
+Based on the Deep Research document, the next focus is building persistent memory, retrieval pipelines, user modeling, and conversation continuity.
+
+---
+
+# Features (Current)
+
+- Voice interface
+- Animated Orb UI
+- AI Runtime Pipeline
+- Dynamic Context Builder
+- Conversation State Management
+- Streaming Responses
+- Modular Architecture
+- Tracing & Observability
+- Provider Abstraction
+- Prompt Assembly Pipeline
+
+---
+
+# Planned Features
+
+- Long-term Memory
+- Emotional State Engine
+- Relationship Modeling
+- Daily Briefings
+- Proactive Suggestions
+- Calendar Awareness
+- Email Integration
+- Knowledge Graph
+- Multi-Agent System
+- Local LLM Support
+- Vision
+- Mobile Companion
+- Smart Home Control
+
+---
+
+# Tech Stack
+
+**Frontend**
+- Next.js
+- React
+- TypeScript
+- TailwindCSS
+- Framer Motion
+
+**Backend**
+- FastAPI
+- Python
+- OpenAI API
+- LangGraph
+- Pydantic
+
+**Infrastructure**
+- Docker
+- Redis
+- PostgreSQL
+- Vector Database (planned)
+
+---
+
+# Project Structure
 
 ```
-vayu/
+ray/
+
 ├── apps/
-│   ├── web/           # React + Vite frontend application
-│   └── api/           # FastAPI backend application
-├── packages/          # Shared TypeScript/JavaScript modules
+│   ├── api/
+│   │   ├── app/
+│   │   │   ├── api/
+│   │   │   ├── core/
+│   │   │   ├── context/
+│   │   │   ├── memory/          (Phase 3)
+│   │   │   ├── prompts/
+│   │   │   └── llm/
+│   │   └── tests/
+│   └── web/
+│       ├── src/
+│       └── public/
+│
+├── packages/
 │   ├── config/
 │   ├── prompts/
 │   ├── sdk/
 │   ├── types/
 │   └── ui/
-├── services/          # Isolated AI services (Python/TS)
-│   ├── llm/
-│   ├── memory/
-│   ├── search/
-│   ├── stt/
-│   ├── tools/
-│   ├── tts/
-│   └── vision/
-├── docker/            # Docker Compose and Dockerfiles
-├── docs/              # Architecture and design documentation
-├── scripts/           # Automation and deployment scripts
-└── tests/             # E2E integration tests
+│
+├── docs/
+│   ├── deep-research-document.md
+│   ├── architecture.md
+│   └── roadmap.md
+│
+├── assets/
+│
+└── README.md
 ```
-
-## Prerequisites
-
-Ensure you have the following installed on your machine:
-- **Node.js** (>= 18.x)
-- **pnpm** (>= 8.x) (`npm install -g pnpm`)
-- **Python** (>= 3.11)
 
 ---
 
-## Initial Setup
+# Getting Started
 
-Follow these steps to set up the repository for local development:
+## Requirements
 
-### 1. Install Node Dependencies
-From the root of the project, run:
+- Python 3.12+
+- Node.js 22+
+- pnpm
+- Git
+
+---
+
+## Clone
+
 ```bash
+git clone https://github.com/NeelakshSaxena/Vayu.git
+cd Vayu
+```
+
+---
+
+## Backend Setup
+
+Create a virtual environment.
+
+```bash
+python -m venv .venv
+```
+
+Activate it.
+
+**Windows**
+
+```bash
+.venv\Scripts\activate
+```
+
+**Linux/macOS**
+
+```bash
+source .venv/bin/activate
+```
+
+Install dependencies.
+
+```bash
+cd apps/api
+pip install -r requirements.txt
+```
+
+---
+
+## Frontend Setup
+
+```bash
+cd apps/web
 pnpm install
 ```
-*Note: If prompted, run `pnpm approve-builds` to allow post-install scripts to execute for specific dependencies.*
 
-### 2. Set up Python Environment (Backend)
-We use a virtual environment (`venv`) to isolate Python dependencies.
-From the root of the project:
+---
 
-**On Windows:**
-```powershell
-python -m venv venv
-.\venv\Scripts\activate
-pip install -r apps/api/requirements.txt
-```
+## Environment Variables
 
-**On macOS / Linux:**
-```bash
-python3 -m venv venv
-source venv/bin/activate
-pip install -r apps/api/requirements.txt
+Create `.env` files in `apps/api` and `apps/web`.
+
+Example:
+
+```env
+VITE_OPEN_ROUTER_KEY=
+VITE_SARVAM_API_KEY=
+OPENAI_API_KEY=
+MODEL=gpt-4o
+DATABASE_URL=
+REDIS_URL=
+VECTOR_DB_URL=
 ```
 
 ---
 
-## Running the Applications
+# Running the Project
 
-We provide handy workspace scripts in the root `package.json` to start your apps easily.
+**Backend**
 
-### Start the Frontend (Web)
-Run the React development server:
 ```bash
-pnpm run dev:web
+cd apps/api
+uvicorn app.main:app --reload
 ```
-This will start the frontend on `http://localhost:5173`.
 
-### Start the Backend (API)
-Ensure your Python virtual environment is activated, then run:
+**Frontend**
+
 ```bash
-pnpm run dev:api
+cd apps/web
+pnpm dev
 ```
-This will start the FastAPI backend server using Uvicorn with hot-reloading on `http://localhost:8000`. 
-Check out the interactive API docs at `http://localhost:8000/docs`.
 
 ---
 
-## Linting & Testing
+# Architecture
 
-To ensure code quality, you can run linting and tests across the monorepo:
-
-- **Lint Frontend:** `pnpm run lint:web`
-- **Lint Backend:** `pnpm run lint:api` (Runs `ruff`)
-- **Test Frontend:** `pnpm run test:web` (Runs `vitest`)
-- **Test Backend:** `pnpm run test:api` (Runs `pytest`)
-- **Build Frontend:** `pnpm run build:web`
-
----
-
-## Docker Setup (Optional)
-
-If you prefer to run the entire stack via Docker, you can use the provided Docker Compose configuration:
-
-```bash
-docker-compose -f docker/docker-compose.yml up --build
+```text
+Voice
+  ↓
+Speech-to-Text
+  ↓
+Context Builder
+  ↓
+Runtime Pipeline
+  ↓
+LLM
+  ↓
+Tool Calls
+  ↓
+Memory (Phase 3)
+  ↓
+Response
+  ↓
+Text-to-Speech
+  ↓
+Orb Animation
 ```
-- **Web App:** Available at `http://localhost:5173`
-- **API Server:** Available at `http://localhost:8000`
 
 ---
 
-## Adding New Features
+# AI Runtime
 
-- **Frontend components:** Add new UI components to `packages/ui` to make them available across all applications, or to `apps/web/src/components` if they are strictly web-specific.
-- **Backend services:** When adding new AI capabilities, build them as isolated modules inside `services/<domain>` (e.g., `services/llm`). Import them cleanly into the FastAPI layer via `apps/api/app/services`.
+Current runtime includes:
+
+- Prompt Assembly
+- Dynamic Context Builder
+- Conversation State
+- Structured Tracing
+- Modular Providers
+- Streaming
+- Response Pipeline
+
+Phase 3 expands this with:
+
+- Semantic Memory
+- Episodic Memory
+- Retrieval
+- Memory Ranking
+- User Profile
+- Memory Consolidation
+
+---
+
+# Roadmap
+
+## Phase 1
+- Project foundation
+- Voice pipeline
+- UI prototype
+**Completed ✅**
+
+---
+
+## Phase 2
+- Runtime pipeline
+- Context builder
+- Observability
+- Modular architecture
+**Completed ✅**
+
+---
+
+## Phase 3 (Current)
+Building the memory system.
+
+Goals include:
+- Persistent memory
+- Retrieval engine
+- Memory graph
+- User profile
+- Conversation continuity
+- Reflection
+- Memory scoring
+- Compression
+- Search
+
+---
+
+## Future
+
+**Phase 4**: Emotion Engine
+**Phase 5**: Proactive Assistant
+**Phase 6**: Full Personal AI
+
+---
+
+# Documentation
+
+Project documentation lives inside `/docs`.
+
+Important files:
+
+- `deep-research-document.md`
+- `architecture.md`
+- `roadmap.md`
+
+---
+
+# Contributing
+
+Contributions are welcome.
+
+Before opening a PR:
+
+- Follow existing code style.
+- Write tests where applicable.
+- Keep commits focused.
+- Document significant architectural changes.
+
+---
+
+# Inspiration
+
+Ray draws inspiration from:
+
+- J.A.R.V.I.S.
+- Iron Man
+- Her
+- Samantha
+- Modern AI research
+- Human-computer interaction
+
+---
+
+# Philosophy
+
+The objective isn't to build a chatbot.
+
+The objective is to build software that understands people.
+
+Every feature should answer one question:
+
+> "Does this make Ray feel more like a trusted companion than a tool?"
+
+---
+
+# License
+
+MIT License
