@@ -24,6 +24,7 @@ class AudioAnalyzer {
 
   private outContext: AudioContext | null = null;
   private outAnalyser: AnalyserNode | null = null;
+  private outGainNode: GainNode | null = null;
   private outDataArray: Uint8Array | null = null;
   private outSource: MediaElementAudioSourceNode | null = null;
   private outAudioElement: HTMLAudioElement | null = null;
@@ -164,7 +165,13 @@ class AudioAnalyzer {
       this.outAnalyser.fftSize = 512;
       this.outAnalyser.smoothingTimeConstant = 0.5;
       this.outDataArray = new Uint8Array(this.outAnalyser.frequencyBinCount);
-      this.outAnalyser.connect(this.outContext.destination);
+      
+      // Boost TTS volume significantly
+      this.outGainNode = this.outContext.createGain();
+      this.outGainNode.gain.value = 4.0; 
+
+      this.outAnalyser.connect(this.outGainNode);
+      this.outGainNode.connect(this.outContext.destination);
     }
 
     if (this.outSource) {

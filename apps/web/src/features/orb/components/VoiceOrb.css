@@ -20,7 +20,6 @@
   cursor: pointer;
   /* Extreme light leaking glow effect matching the internal colors */
   filter: drop-shadow(0 0 calc(10px * var(--glow-intensity, 1)) var(--color-1, #1E5BFF)) drop-shadow(0 0 calc(20px * var(--glow-intensity, 1)) var(--color-2, #6FD8FF)) drop-shadow(0 0 calc(40px * var(--glow-intensity, 1)) var(--glow-color, rgba(255, 255, 255, 0.4)));
-  transition: width 0.1s linear, height 0.1s linear, filter 0.1s linear;
 }
 
 .orb {
@@ -53,24 +52,13 @@
   position: absolute;
   left: -120%;
   top: -25%;
-  /* Size reacts to audio */
-  width: var(--inner-size, 160%);
+  width: 160%;
   aspect-ratio: 1;
   border-radius: 50%;
-  /* Dynamic Color 1 */
   background: var(--color-1, #1E5BFF);
-  clip-path: polygon(50% 0%,
-      61% 35%,
-      98% 35%,
-      68% 57%,
-      79% 91%,
-      50% 70%,
-      21% 91%,
-      32% 57%,
-      2% 35%,
-      39% 35%);
+  clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
   animation: inner-rotate var(--animation-speed, 6s) linear infinite;
-  transition: width 0.1s linear, background-color 0.5s ease;
+  transition: background-color 0.5s ease;
 }
 
 .orb-inner:nth-child(2) {
@@ -78,31 +66,14 @@
   right: -120%;
   top: auto;
   bottom: -25%;
-  /* Dynamic Color 2 */
   background: var(--color-2, #6FD8FF);
   animation-duration: calc(var(--animation-speed, 6s) * 1.33);
-  clip-path: polygon(20% 0%,
-      0% 20%,
-      30% 50%,
-      0% 80%,
-      20% 100%,
-      50% 70%,
-      80% 100%,
-      100% 80%,
-      70% 50%,
-      100% 20%,
-      80% 0%,
-      50% 30%);
+  clip-path: polygon(20% 0%, 0% 20%, 30% 50%, 0% 80%, 20% 100%, 50% 70%, 80% 100%, 100% 80%, 70% 50%, 100% 20%, 80% 0%, 50% 30%);
 }
 
 @keyframes inner-rotate {
-  0% {
-    transform: rotate(0deg);
-  }
-
-  100% {
-    transform: rotate(360deg);
-  }
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
 /* Vignette Animations */

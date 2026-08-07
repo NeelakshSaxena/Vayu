@@ -74,15 +74,12 @@ export const ChatUI: React.FC<ChatUIProps> = ({ messages, onSendMessage, current
                     <BubbleContent>
                       {isUser ? (
                         <p className="whitespace-pre-wrap">{msg.text}</p>
+                      ) : !msg.text ? (
+                        <div className="flex items-center min-h-[28px]">
+                          <ShimmeringText text="Thinking..." className="text-[18px] tracking-wide" duration={1.5} />
+                        </div>
                       ) : (
                         <Response className="text-[18px] prose prose-slate dark:prose-invert max-w-none prose-p:leading-relaxed prose-p:text-[18px] prose-li:text-[18px] prose-a:text-[18px] prose-pre:bg-black/5 dark:prose-pre:bg-white/10 prose-pre:text-[14px] prose-pre:text-black dark:prose-pre:text-white">{msg.text}</Response>
-                      )}
-                      
-                      {/* Status marker if thinking */}
-                      {!isUser && isLatest && currentState === OrbState.Thinking && (
-                        <div className="mt-2">
-                          <ShimmeringText text="Thinking..." className="text-xs tracking-wider" duration={1.5} />
-                        </div>
                       )}
                     </BubbleContent>
                   </Bubble>
