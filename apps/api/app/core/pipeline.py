@@ -35,7 +35,7 @@ class AIRuntimePipeline:
         self.llm_router = llm_router or LLMRouter()
 
     @trace_stage("pipeline.run_stream")
-    async def run_stream(self, session_id: str, user_message: str, **kwargs) -> AsyncGenerator[str, None]:
+    async def run_stream(self, session_id: str, user_message: str, provider: str = None, **kwargs) -> AsyncGenerator[str, None]:
         """
         Runs the full AI pipeline asynchronously and yields chunks of the LLM response.
         """
@@ -47,7 +47,7 @@ class AIRuntimePipeline:
         
         # 3. Stream from LLM Router
         full_response_chunks = []
-        async for chunk in self.llm_router.route_stream(messages, **kwargs):
+        async for chunk in self.llm_router.route_stream(messages, provider=provider, **kwargs):
             full_response_chunks.append(chunk)
             yield chunk
             

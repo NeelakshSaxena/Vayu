@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React from 'react';
 import { motion, useTransform } from 'framer-motion';
 import { useOrbStore } from '../../../stores/useOrbStore';
 import { OrbState } from '../../../types';
@@ -33,10 +33,10 @@ export const VoiceOrb: React.FC<VoiceOrbProps> = ({ isMini = false, orbStateOver
   const interaction = useInteractionEngine(isMini);
 
   // 3. State & Micro-expression Engine
-  const stateAnim = useStateAnimator(currentState, currentMood, isMini, theme, audio);
+  const stateAnim = useStateAnimator(currentState, currentMood, isMini, theme);
 
   // 4. Ambient Engine
-  const ambient = useAmbientEngine(currentState, theme, audio, intensity);
+  const ambient = useAmbientEngine(currentState, audio, intensity);
   
   // 5. Breathing Hook
   const breath = useBreathing(currentState === OrbState.Idle || currentState === OrbState.Thinking);

@@ -3,7 +3,6 @@ import { useEffect } from 'react';
 import { OrbState, Mood } from '../../../types';
 import { springs } from '../utils/springs';
 import { useMicroExpressions } from '../hooks/useMicroExpressions';
-import type { AudioReactorOutputs } from './useAudioReactor';
 
 export interface StateAnimatorOutputs {
   baseScale: MotionValue<number>;
@@ -16,8 +15,7 @@ export const useStateAnimator = (
   state: OrbState, 
   mood: Mood, 
   isMini: boolean,
-  theme: 'dark' | 'light',
-  audio: AudioReactorOutputs
+  theme: 'dark' | 'light'
 ): StateAnimatorOutputs => {
   const scale = useMotionValue(1);
   const y = useMotionValue(0); 

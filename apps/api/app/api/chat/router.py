@@ -12,6 +12,7 @@ pipeline = AIRuntimePipeline()
 class ChatRequest(BaseModel):
     message: str
     session_id: str = "default_session"
+    provider: str = None
     metadata: Dict[str, Any] = {}
 
 @router.post("/")
@@ -21,10 +22,12 @@ async def chat(request: ChatRequest, current_user: dict = Depends(get_current_us
     """
     # Just a simple non-streaming implementation for fallback
     chunks = []
-    async for chunk in pipeline.run_stream(request.session_id, request.message):
+    async for chunk in pipeline.run_stream(request.session_id, request.message, provider=request.provider):
         chunks.append(chunk)
     
     return {"reply": "".join(chunks)}
+
+import asyncio
 
 @router.websocket("/ws")
 async def websocket_chat(websocket: WebSocket):
@@ -32,30 +35,55 @@ async def websocket_chat(websocket: WebSocket):
     WebSocket endpoint for streaming chat completion using structured protocol.
     """
     await websocket.accept()
+    
+    cancel_event = None
+    stream_task = None
+    
     try:
         while True:
             data = await websocket.receive_json()
             msg_type = data.get("type")
             
             if msg_type == "chat":
+                if stream_task and not stream_task.done():
+                    cancel_event.set()
+                    # wait for it to finish canceling
+                    try:
+                        await stream_task
+                    except Exception:
+                        pass
+                
                 message = data.get("message", "")
-                # TODO: replace with authenticated user/session
                 session_id = data.get("session_id", "default_session")
+                provider = data.get("provider", None)
+                cancel_event = asyncio.Event()
                 
-                # Send start event
-                await websocket.send_json({"type": "start"})
+                async def stream_response(sess_id, msg, prov, ev):
+                    try:
+                        await websocket.send_json({"type": "start"})
+                        async for chunk in pipeline.run_stream(sess_id, msg, provider=prov):
+                            if ev.is_set():
+                                break
+                            await websocket.send_json({
+                                "type": "token",
+                                "content": chunk
+                            })
+                        if not ev.is_set():
+                            await websocket.send_json({"type": "end"})
+                    except Exception as e:
+                        print(f"Stream error: {e}")
+                        try:
+                            await websocket.send_json({"type": "error", "error": str(e)})
+                        except Exception:
+                            pass
+                        
+                stream_task = asyncio.create_task(stream_response(session_id, message, provider, cancel_event))
                 
-                # Stream tokens
-                async for chunk in pipeline.run_stream(session_id, message):
-                    await websocket.send_json({
-                        "type": "token",
-                        "content": chunk
-                    })
-                    
-                # Send end event
-                await websocket.send_json({"type": "end"})
+            elif msg_type == "cancel":
+                if cancel_event:
+                    cancel_event.set()
                 
     except WebSocketDisconnect:
-        # Client disconnected
-        pass
+        if cancel_event:
+            cancel_event.set()
 

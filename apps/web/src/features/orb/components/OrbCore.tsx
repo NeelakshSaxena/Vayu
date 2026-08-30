@@ -13,7 +13,7 @@ export interface OrbCoreProps {
   theme: 'dark' | 'light';
 }
 
-export const OrbCore: React.FC<OrbCoreProps> = ({ colors, audio, state, ambient, theme }) => {
+export const OrbCore: React.FC<OrbCoreProps> = ({ colors, audio, ambient, theme }) => {
   const innerScale = useTransform(audio.mid, (mid) => 1 + (mid * 0.2));
   
   // Use speech energy to drive the CSS animation speed variable

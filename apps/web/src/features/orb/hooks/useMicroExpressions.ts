@@ -7,7 +7,7 @@ export const useMicroExpressions = (state: OrbState): any => {
   const controls = useAnimation();
 
   useEffect(() => {
-    let timeoutId: NodeJS.Timeout;
+    let timeoutId: ReturnType<typeof setTimeout>;
     let isActive = true;
 
     const runExpressions = async () => {

@@ -12,7 +12,6 @@ export interface AmbientEngineOutputs {
 
 export const useAmbientEngine = (
   state: OrbState,
-  theme: 'dark' | 'light',
   audio: AudioReactorOutputs,
   intensityMultiplier: number
 ): AmbientEngineOutputs => {

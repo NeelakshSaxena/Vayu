@@ -70,7 +70,7 @@ interface DevControlsProps {
 }
 
 export const DevControls: React.FC<DevControlsProps> = ({ onSimulateMessage, onStartMic, onStopMic, micActive }) => {
-  const { theme, showDevControls } = useSettingsStore();
+  const { theme, showDevControls, provider, setProvider } = useSettingsStore();
   const { state, mood, setState, setMood } = useOrbStore();
   const setMessages = useConversationStore((state) => state.setMessages);
 
@@ -80,10 +80,36 @@ export const DevControls: React.FC<DevControlsProps> = ({ onSimulateMessage, onS
   if (!showDevControls) return null;
 
   return (
-    <div className={cn("absolute top-20 right-8 z-30 flex flex-col gap-4 p-4 rounded-xl backdrop-blur-sm border scale-90 origin-top-right transition-colors pointer-events-auto", theme === 'dark' ? "bg-black/50 border-white/10" : "bg-white/50 border-black/10")}>
+    <div className={cn("absolute top-20 right-8 z-30 flex flex-col gap-4 p-4 rounded-xl backdrop-blur-sm border scale-90 origin-top-right transition-colors pointer-events-auto max-w-xs", theme === 'dark' ? "bg-black/60 border-white/10" : "bg-white/60 border-black/10")}>
       <h1 className={cn("text-xl font-bold tracking-wider", theme === 'dark' ? "text-white/90" : "text-black/90")}>DEV CONTROLS</h1>
 
+      {/* Hosting Location / Provider Selector */}
       <div className="flex flex-col gap-2">
+        <label className={cn("text-xs uppercase tracking-widest font-semibold", theme === 'dark' ? "text-white/60" : "text-black/60")}>Model Hosting Location</label>
+        <div className="flex flex-col gap-1.5 w-full">
+          {[
+            { id: 'openrouter', label: 'OPENROUTER', desc: 'Cloud LLM Gateway' },
+            { id: 'runpod', label: 'RUNPOD', desc: 'Serverless vLLM / Qwen3' },
+            { id: 'mock', label: 'MOCK', desc: 'Pipeline Simulator' }
+          ].map((p) => (
+            <button
+              key={p.id}
+              onClick={() => setProvider(p.id as any)}
+              className={cn(
+                "px-3 py-2 rounded-lg text-xs font-medium transition-all flex items-center justify-between border w-full text-left",
+                provider === p.id 
+                  ? "bg-blue-600 border-blue-500 text-white shadow-md font-semibold" 
+                  : (theme === 'dark' ? "bg-white/5 hover:bg-white/10 border-white/10 text-white/80" : "bg-black/5 hover:bg-black/10 border-black/10 text-black/80")
+              )}
+            >
+              <span>{p.label}</span>
+              <span className={cn("text-[10px]", provider === p.id ? "text-blue-100 opacity-90" : "opacity-50")}>{p.desc}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className={cn("flex flex-col gap-2 mt-2 pt-4 border-t", theme === 'dark' ? "border-white/10" : "border-black/10")}>
         <label className={cn("text-xs uppercase tracking-widest", theme === 'dark' ? "text-white/50" : "text-black/50")}>State</label>
         <div className="flex flex-wrap gap-2 max-w-[200px]">
           {Object.values(OrbState).map((s) => (
