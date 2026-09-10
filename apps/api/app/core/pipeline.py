@@ -47,7 +47,7 @@ class AIRuntimePipeline:
         
         # 3. Stream from Agent Adapter
         full_response_chunks = []
-        async for chunk in self.agent_adapter.stream_agent_events(messages):
+        async for chunk in self.agent_adapter.stream_agent_events(messages, session_id=session_id):
             full_response_chunks.append(chunk)
             yield chunk
             

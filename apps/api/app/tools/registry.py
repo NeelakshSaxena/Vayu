@@ -39,6 +39,18 @@ async def search_memory(query: str, config: RunnableConfig) -> str:
         
     return "\n".join(formatted)
 
+@tool
+async def retrieve_document(query: str, config: RunnableConfig) -> str:
+    """
+    Searches uploaded documents or knowledge base for information matching the query.
+    Use this when the user asks questions about their files, docs, or specific knowledge domains.
+    """
+    # Currently a mock implementation for Phase 3/6 tools setup
+    # In a real implementation, this would connect to a vector store with document embeddings
+    session_id = config.get("configurable", {}).get("session_id")
+    
+    return f"Retrieved documents matching '{query}' for session {session_id}.\n[Document 1: Placeholder document content regarding {query}]"
+
 def get_available_tools():
     """Returns the list of tools to bind to the LLM."""
-    return [get_current_time, get_weather, search_memory]
+    return [get_current_time, get_weather, search_memory, retrieve_document]

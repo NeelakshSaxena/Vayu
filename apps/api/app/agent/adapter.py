@@ -90,7 +90,7 @@ class AgentAdapter:
         return lc_messages
         
     @trace_stage("agent.stream")
-    async def stream_agent_events(self, dict_messages: List[Dict[str, Any]]) -> AsyncGenerator[str, None]:
+    async def stream_agent_events(self, dict_messages: List[Dict[str, Any]], session_id: str = None) -> AsyncGenerator[str, None]:
         """
         Runs the LangGraph workflow and yields text chunks back to the WebSocket endpoint.
         """
@@ -98,7 +98,9 @@ class AgentAdapter:
             "messages": self._convert_messages(dict_messages)
         }
         
-        async for event in self.graph.astream_events(inputs, version="v2"):
+        config = {"configurable": {"session_id": session_id}} if session_id else None
+        
+        async for event in self.graph.astream_events(inputs, config=config, version="v2"):
             kind = event["event"]
             if kind == "on_chat_model_stream":
                 chunk = event["data"]["chunk"]

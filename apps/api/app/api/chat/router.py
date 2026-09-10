@@ -2,9 +2,11 @@ from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Depends
 from pydantic import BaseModel
 from typing import List, Dict, Any
 import json
+import asyncio
 
 from app.core.security import get_current_user
 from app.core.pipeline import AIRuntimePipeline
+from app.core.notifications import notification_manager
 
 router = APIRouter()
 pipeline = AIRuntimePipeline()
@@ -27,14 +29,16 @@ async def chat(request: ChatRequest, current_user: dict = Depends(get_current_us
     
     return {"reply": "".join(chunks)}
 
-import asyncio
-
 @router.websocket("/ws")
-async def websocket_chat(websocket: WebSocket):
+async def websocket_chat(websocket: WebSocket, session_id: str = "default_session"):
     """
     WebSocket endpoint for streaming chat completion using structured protocol.
+    Optionally accepts session_id in query string for immediate registration to notifications.
     """
     await websocket.accept()
+    
+    # Register to receive background notifications for this session right away
+    await notification_manager.connect(session_id, websocket)
     
     cancel_event = None
     stream_task = None
@@ -54,7 +58,14 @@ async def websocket_chat(websocket: WebSocket):
                         pass
                 
                 message = data.get("message", "")
-                session_id = data.get("session_id", "default_session")
+                
+                # Update registration if session_id changes in the message
+                msg_session_id = data.get("session_id", session_id)
+                if msg_session_id != session_id:
+                    notification_manager.disconnect(session_id, websocket)
+                    session_id = msg_session_id
+                    await notification_manager.connect(session_id, websocket)
+                    
                 provider = data.get("provider", None)
                 cancel_event = asyncio.Event()
                 
@@ -86,4 +97,7 @@ async def websocket_chat(websocket: WebSocket):
     except WebSocketDisconnect:
         if cancel_event:
             cancel_event.set()
+    finally:
+        # Always clean up connection on disconnect
+        notification_manager.disconnect(session_id, websocket)
 
