@@ -13,6 +13,8 @@ class Settings(BaseSettings):
     model_name: str = Field(default="Qwen/Qwen3-14B", env="MODEL_NAME")
     
     default_provider: str = Field(default="openrouter", env="LLM_PROVIDER")
+    
+    redis_url: str = Field(default="redis://localhost:6379", env="REDIS_URL")
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 

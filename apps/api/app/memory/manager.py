@@ -1,5 +1,6 @@
 from app.memory.working import WorkingMemory, InMemoryWorkingMemory
 from app.memory.long_term import VectorStore, MockVectorStore
+from app.memory.chroma_store import ChromaVectorStore
 from app.core.tracing import trace_stage
 
 class MemoryManager:
@@ -9,7 +10,7 @@ class MemoryManager:
     
     def __init__(self, working_memory: WorkingMemory = None, vector_store: VectorStore = None):
         self.working = working_memory or InMemoryWorkingMemory()
-        self.long_term = vector_store or MockVectorStore()
+        self.long_term = vector_store or ChromaVectorStore()
         
     @trace_stage("memory.save_interaction")
     async def save_interaction(self, session_id: str, user_message: str, assistant_message: str):

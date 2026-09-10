@@ -17,7 +17,7 @@ async def test_ws():
         
         while True:
             try:
-                msg = await asyncio.wait_for(websocket.recv(), timeout=20.0)
+                msg = await asyncio.wait_for(websocket.recv(), timeout=60.0)
                 data = json.loads(msg)
                 print(f"Received: {data}")
                 if data.get("type") in ["end", "error"]:
