@@ -21,7 +21,7 @@ class WebSocketService {
     });
   }
 
-  sendMessage(message: string, onToken: WSMessageCallback, onEnd: WSEndCallback, onError: WSErrorCallback) {
+  sendMessage(message: string, onToken: WSMessageCallback, onEnd: WSEndCallback, onError: WSErrorCallback, provider: string = 'openrouter') {
     if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
       onError(new Error("WebSocket is not connected"));
       return;
@@ -42,6 +42,8 @@ class WebSocketService {
           }
         } else if (data.type === "end") {
           onEnd(fullResponse);
+        } else if (data.type === "error") {
+          onError(new Error(data.error || "Unknown stream error"));
         }
       } catch (e: any) {
         onError(e);
@@ -55,8 +57,15 @@ class WebSocketService {
     this.ws.send(JSON.stringify({
       type: "chat",
       session_id: "default_session",
-      message: message
+      message: message,
+      provider: provider
     }));
+  }
+
+  cancel() {
+    if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+      this.ws.send(JSON.stringify({ type: "cancel" }));
+    }
   }
 
   disconnect() {

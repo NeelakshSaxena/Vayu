@@ -3,7 +3,11 @@ import { useSettingsStore } from '../../../stores/useSettingsStore';
 import chatbotIcon from '../../../assets/chatbot.png';
 import { cn } from '../../../lib/utils';
 
-export const TopNav: React.FC = () => {
+interface TopNavProps {
+  onWakeUp?: () => void;
+}
+
+export const TopNav: React.FC<TopNavProps> = ({ onWakeUp }) => {
   const { theme, appMode, setTheme, setAppMode, showDevControls, setShowDevControls } = useSettingsStore();
 
   return (
@@ -25,6 +29,17 @@ export const TopNav: React.FC = () => {
         </button>
       </div>
       <div className="flex gap-4 flex-1 justify-end">
+        {onWakeUp && (
+          <button
+            onClick={onWakeUp}
+            className={cn("px-4 py-1.5 rounded-full text-sm font-medium transition-colors pointer-events-auto border backdrop-blur-md flex items-center gap-2", 
+              theme === 'dark' ? "bg-blue-600/20 text-blue-300 border-blue-500/30 hover:bg-blue-600/30" : "bg-blue-100 text-blue-700 border-blue-300 hover:bg-blue-200"
+            )}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+            Wake Up Serverless
+          </button>
+        )}
         <div
           onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
           className={cn("w-10 h-10 rounded-full backdrop-blur-md flex justify-center items-center pointer-events-auto cursor-pointer transition-colors", theme === 'dark' ? "bg-white/10 hover:bg-white/20" : "bg-black/10 hover:bg-black/20")}

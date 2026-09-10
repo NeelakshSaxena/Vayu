@@ -7,6 +7,7 @@ from app.api.chat.router import router as chat_router
 from app.api.memory.router import router as memory_router
 from app.api.tools.router import router as tools_router
 from app.api.auth.router import router as auth_router
+from app.api.tasks.router import router as tasks_router
 
 # Setup structured logging
 logger = setup_logging(debug=settings.debug)
@@ -36,6 +37,7 @@ app.include_router(auth_router, prefix="/api/auth", tags=["Auth"])
 app.include_router(chat_router, prefix="/api/chat", tags=["Chat"])
 app.include_router(memory_router, prefix="/api/memory", tags=["Memory"])
 app.include_router(tools_router, prefix="/api/tools", tags=["Tools"])
+app.include_router(tasks_router, prefix="/api/tasks", tags=["Tasks"])
 
 @app.on_event("startup")
 async def startup_event():

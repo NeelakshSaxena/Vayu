@@ -12,7 +12,7 @@ export const useBreathing = (isActive: boolean) => {
       return;
     }
     
-    let timeoutId: NodeJS.Timeout;
+    let timeoutId: ReturnType<typeof setTimeout>;
     
     const cycleBreath = async () => {
       // Inhale

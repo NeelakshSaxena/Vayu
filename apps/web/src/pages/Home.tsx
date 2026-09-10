@@ -18,7 +18,7 @@ export const Home = () => {
   const errorMessage = useOrbStore((state) => state.errorMessage);
   const theme = useSettingsStore((state) => state.theme);
   const appMode = useSettingsStore((state) => state.appMode);
-  const { messages, handleSendMessage } = useChat();
+  const { messages, handleSendMessage, stopGeneration, regenerate, editMessage, generationState, activeAiMessageId } = useChat();
   const { interimTranscript, startMic, stopMic, micActive } = useVoice(handleSendMessage);
   const isScreensaver = useScreensaver(30000); // 30 seconds
 
@@ -92,11 +92,16 @@ export const Home = () => {
               onSendMessage={handleSendMessage} 
               currentState={state} 
               ModelAvatar={<VoiceOrb isMini orbStateOverride={state} />}
+              generationState={generationState}
+              onStopGeneration={stopGeneration}
+              onRegenerate={regenerate}
+              onEditMessage={editMessage}
+              activeAiMessageId={activeAiMessageId}
             />
           </div>
         )}
 
-        <TopNav />
+        <TopNav onWakeUp={() => handleSendMessage("Are you awake? Reply 'I am online and connected successfully' and nothing else.")} />
         <DevControls 
           onSimulateMessage={handleSendMessage}
           onStartMic={startMic}

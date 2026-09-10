@@ -37,8 +37,7 @@ class OpenRouterProvider(LLMProvider):
             async with client.stream("POST", f"{self.base_url}/chat/completions", headers=headers, json=payload) as response:
                 if response.status_code != 200:
                     error_text = await response.aread()
-                    yield f"Error from OpenRouter: {response.status_code} - {error_text.decode('utf-8')}"
-                    return
+                    raise Exception(f"OpenRouter API Error {response.status_code}: {error_text.decode('utf-8')}")
                     
                 async for line in response.aiter_lines():
                     if line.startswith("data: "):
